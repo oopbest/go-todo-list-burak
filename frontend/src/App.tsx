@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 import {
   Box,
   Center,
@@ -10,135 +8,86 @@ import {
   Text,
 } from "@chakra-ui/react";
 
-import { createTodo, deleteTodo, getTodos, updateTodo } from "./api/todos";
 import { TodoForm } from "./components/TodoForm";
 import { TodoList } from "./components/TodoList";
-import type { Todo } from "./types/todo";
+import { useTodos } from "./features/todos/useTodos";
+import {
+  useCreateTodo,
+  useDeleteTodo,
+  useUpdateTodo,
+} from "./features/todos/useTodoMutations";
 
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [updatingTodoIDs, setUpdatingTodoIDs] = useState<Set<string>>(
-    new Set(),
+  const todosQuery = useTodos();
+  const createMutation = useCreateTodo();
+  const updateMutation = useUpdateTodo();
+  const deleteMutation = useDeleteTodo();
+
+  const todos = todosQuery.data ?? [];
+  const isLoading = todosQuery.isPending;
+  const error =
+    todosQuery.error instanceof Error
+      ? todosQuery.error.message
+      : todosQuery.error
+        ? "Unable to load tasks"
+        : null;
+
+  const mutationErrorValue = updateMutation.error ?? deleteMutation.error;
+
+  const mutationError =
+    mutationErrorValue instanceof Error
+      ? mutationErrorValue.message
+      : updateMutation.error
+        ? "Unable to update task"
+        : deleteMutation.error
+          ? "Unable to delete task"
+          : null;
+
+  const updatingTodoIDs = new Set<string>(
+    updateMutation.isPending && updateMutation.variables
+      ? [updateMutation.variables.id]
+      : [],
   );
-  const [mutationError, setMutationError] = useState<string | null>(null);
-  const [deletingTodoIDs, setDeletingTodoIDs] = useState<Set<string>>(
-    new Set(),
+
+  const deletingTodoIDs = new Set<string>(
+    deleteMutation.isPending && deleteMutation.variables
+      ? [deleteMutation.variables]
+      : [],
   );
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadTodos() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const data = await getTodos(controller.signal);
-        setTodos(data);
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-
-        setError(
-          error instanceof Error ? error.message : "Failed to retrieve todos",
-        );
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadTodos();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  async function handleCreateTodo(body: string) {
-    const createdTodo = await createTodo({
+  const handleCreate = async (body: string) => {
+    await createMutation.mutateAsync({
       body,
       completed: false,
     });
+  };
 
-    setTodos((currentTodos) => [...currentTodos, createdTodo]);
-  }
-
-  async function handleToggleTodo(id: string, completed: boolean) {
-    setUpdatingTodoIDs((currentIDs) => {
-      const nextIDs = new Set(currentIDs);
-      nextIDs.add(id);
-
-      return nextIDs;
-    });
-
-    setMutationError(null);
-
+  const handleToggle = async (id: string, completed: boolean) => {
     try {
-      const updatedTodo = await updateTodo(id, {
-        completed,
+      await updateMutation.mutateAsync({
+        id,
+        input: { completed },
       });
-
-      setTodos((currentTodos) =>
-        currentTodos.map((todo) =>
-          todo.id === updatedTodo.id ? updatedTodo : todo,
-        ),
-      );
-    } catch (error) {
-      setMutationError(
-        error instanceof Error ? error.message : "Unable to update todo",
-      );
-    } finally {
-      setUpdatingTodoIDs((currentIDs) => {
-        const nextIDs = new Set(currentIDs);
-        nextIDs.delete(id);
-
-        return nextIDs;
-      });
+    } catch {
+      // The mutation error is rendered by App.
     }
-  }
+  };
 
-  async function handleDeleteTodo(id: string) {
-    const todoToDelete = todos.find((todo) => todo.id === id);
-
+  const handleDelete = async (id: string) => {
     const confirmed = window.confirm(
-      `Delete "${todoToDelete?.body ?? "this todo"}"?`,
+      "Are you sure you want to delete this task?",
     );
 
     if (!confirmed) {
       return;
     }
 
-    setDeletingTodoIDs((currentIDs) => {
-      const nextIDs = new Set(currentIDs);
-      nextIDs.add(id);
-
-      return nextIDs;
-    });
-
-    setMutationError(null);
-
     try {
-      await deleteTodo(id);
-
-      setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
-    } catch (error) {
-      setMutationError(
-        error instanceof Error ? error.message : "Unable to delete todo",
-      );
-    } finally {
-      setDeletingTodoIDs((currentIDs) => {
-        const nextIDs = new Set(currentIDs);
-        nextIDs.delete(id);
-
-        return nextIDs;
-      });
+      await deleteMutation.mutateAsync(id);
+    } catch {
+      // The mutation error is rendered by App.
     }
-  }
+  };
 
   return (
     <Box
@@ -149,9 +98,7 @@ function App() {
     >
       <Container maxW="2xl">
         <Stack gap="5">
-          {!isLoading && !error && (
-            <TodoForm onCreate={handleCreateTodo} />
-          )}
+          {!isLoading && !error && <TodoForm onCreate={handleCreate} />}
 
           <Heading
             as="h1"
@@ -208,8 +155,8 @@ function App() {
                 todos={todos}
                 updatingTodoIDs={updatingTodoIDs}
                 deletingTodoIDs={deletingTodoIDs}
-                onToggle={handleToggleTodo}
-                onDelete={handleDeleteTodo}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
               />
             </>
           )}
