@@ -30,7 +30,28 @@ func main() {
 
 	app := fiber.New()
 
+	// Health check endpoint to check if the server is running
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status": "ok",
+		})
+	})
+
 	todo.RegisterRoutes(app.Group("/api/todos"), todoHandler)
+
+	// API route not found handler
+	app.Use("/api", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "API route not found",
+		})
+	})
+
+	// Serve the React frontend
+	app.Static("/", "./frontend/dist")
+	// Catch-all route to serve index.html for client-side routing
+	app.Get("/*", func(c *fiber.Ctx) error {
+		return c.SendFile("./frontend/dist/index.html")
+	})
 
 	log.Printf("Server running on port %s", cfg.Port)
 	log.Fatal(app.Listen(":" + cfg.Port))
