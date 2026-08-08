@@ -62,11 +62,11 @@ function App() {
     });
   };
 
-  const handleToggle = async (id: string, completed: boolean) => {
+  const handleComplete = async (id: string) => {
     try {
       await updateMutation.mutateAsync({
         id,
-        input: { completed },
+        input: { completed: true },
       });
     } catch {
       // The mutation error is rendered by App.
@@ -155,7 +155,7 @@ function App() {
                 todos={todos}
                 updatingTodoIDs={updatingTodoIDs}
                 deletingTodoIDs={deletingTodoIDs}
-                onToggle={handleToggle}
+                onComplete={handleComplete}
                 onDelete={handleDelete}
               />
             </>

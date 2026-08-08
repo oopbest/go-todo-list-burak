@@ -1,11 +1,4 @@
-import {
-  Badge,
-  Box,
-  HStack,
-  IconButton,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
+import { Badge, Box, HStack, IconButton, Stack, Text } from "@chakra-ui/react";
 import { LuCircleCheckBig, LuTrash2 } from "react-icons/lu";
 
 import type { Todo } from "../types/todo";
@@ -14,7 +7,7 @@ type TodoListProps = {
   todos: Todo[];
   updatingTodoIDs: Set<string>;
   deletingTodoIDs: Set<string>;
-  onToggle: (id: string, completed: boolean) => Promise<void>;
+  onComplete: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 };
 
@@ -22,7 +15,7 @@ export function TodoList({
   todos,
   updatingTodoIDs,
   deletingTodoIDs,
-  onToggle,
+  onComplete,
   onDelete,
 }: TodoListProps) {
   if (todos.length === 0) {
@@ -87,7 +80,7 @@ export function TodoList({
                   fontWeight="bold"
                   letterSpacing="wide"
                 >
-                  {todo.completed ? "Done" : "In progress"}
+                  {todo.completed ? "DONE" : "IN PROGRESS"}
                 </Badge>
               </HStack>
             </Box>
@@ -101,20 +94,22 @@ export function TodoList({
                 type="button"
                 aria-label={
                   todo.completed
-                    ? `Mark ${todo.body} as in progress`
+                    ? `${todo.body} is already completed`
                     : `Mark ${todo.body} as done`
                 }
-                title={todo.completed ? "Mark as in progress" : "Mark as done"}
+                title={todo.completed ? "Task completed" : "Mark as done"}
                 size="sm"
                 variant="ghost"
                 colorPalette="green"
                 color="green.300"
                 loading={isUpdating}
-                disabled={isBusy}
+                disabled={isBusy || todo.completed}
                 borderRadius="full"
                 _hover={{ bg: "rgba(34, 197, 94, 0.15)", color: "green.200" }}
                 onClick={() => {
-                  void onToggle(todo.id, !todo.completed);
+                  if (!todo.completed) {
+                    void onComplete(todo.id);
+                  }
                 }}
               >
                 <LuCircleCheckBig size="22" />

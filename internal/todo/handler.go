@@ -118,6 +118,12 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 			JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
+	// If the request is trying to set Completed to false, return an error
+	if request.Completed != nil && !*request.Completed {
+		return c.Status(fiber.StatusBadRequest).
+			JSON(fiber.Map{"error": "Completed todo cannot be reopened"})
+	}
+
 	updates := bson.M{}
 
 	if request.Completed != nil {
