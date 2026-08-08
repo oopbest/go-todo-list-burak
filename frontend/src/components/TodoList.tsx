@@ -23,13 +23,17 @@ export function TodoList({
       <Box
         borderWidth="1px"
         borderStyle="dashed"
-        borderColor="rgba(148, 163, 184, 0.32)"
+        borderColor="border.emphasized"
         borderRadius="xl"
         py="10"
         textAlign="center"
-        bg="rgba(15, 23, 42, 0.25)"
+        bg="bg.panel"
+        _dark={{
+          borderColor: "rgba(148, 163, 184, 0.32)",
+          bg: "rgba(15, 23, 42, 0.25)",
+        }}
       >
-        <Text color="gray.400">No tasks yet.</Text>
+        <Text color="fg.muted">No tasks yet.</Text>
       </Box>
     );
   }
@@ -54,21 +58,29 @@ export function TodoList({
               minW="0"
               flex="1"
               borderWidth="2px"
-              borderColor="rgba(148, 163, 184, 0.28)"
+              borderColor="border.emphasized"
               borderRadius="lg"
-              bg="rgba(15, 23, 42, 0.34)"
+              bg="bg.panel"
               px={{ base: "3", md: "4" }}
               py="3"
+              _dark={{
+                borderColor: "rgba(148, 163, 184, 0.28)",
+                bg: "rgba(15, 23, 42, 0.34)",
+              }}
             >
               <HStack justify="space-between" gap="3">
                 <Text
                   minW="0"
-                  color={todo.completed ? "green.200" : "yellow.100"}
+                  color={todo.completed ? "green.700" : "yellow.800"}
                   fontSize={{ base: "md", md: "lg" }}
                   textDecoration={todo.completed ? "line-through" : "none"}
                   textDecorationThickness="2px"
-                  textDecorationColor="cyan.300"
+                  textDecorationColor="cyan.600"
                   overflowWrap="anywhere"
+                  _dark={{
+                    color: todo.completed ? "green.200" : "yellow.100",
+                    textDecorationColor: "cyan.300",
+                  }}
                 >
                   {todo.body}
                 </Text>
@@ -101,11 +113,18 @@ export function TodoList({
                 size="sm"
                 variant="ghost"
                 colorPalette="green"
-                color="green.300"
+                color="green.600"
                 loading={isUpdating}
                 disabled={isBusy || todo.completed}
                 borderRadius="full"
-                _hover={{ bg: "rgba(34, 197, 94, 0.15)", color: "green.200" }}
+                _hover={{ bg: "green.50", color: "green.700" }}
+                _dark={{
+                  color: "green.300",
+                  _hover: {
+                    bg: "rgba(34, 197, 94, 0.15)",
+                    color: "green.200",
+                  },
+                }}
                 onClick={() => {
                   if (!todo.completed) {
                     onComplete(todo.id);
@@ -122,10 +141,17 @@ export function TodoList({
                 size="sm"
                 variant="ghost"
                 colorPalette="red"
-                color="red.400"
+                color="red.600"
                 loading={isDeleting}
                 disabled={isBusy}
-                _hover={{ bg: "rgba(239, 68, 68, 0.15)", color: "red.300" }}
+                _hover={{ bg: "red.50", color: "red.700" }}
+                _dark={{
+                  color: "red.400",
+                  _hover: {
+                    bg: "rgba(239, 68, 68, 0.15)",
+                    color: "red.300",
+                  },
+                }}
                 onClick={() => {
                   onDelete(todo.id);
                 }}

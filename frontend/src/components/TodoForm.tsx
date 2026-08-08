@@ -58,16 +58,27 @@ export function TodoForm({ onCreate }: TodoFormProps) {
             flex="1"
             minW="0"
             h={{ base: "12", md: "14" }}
-            bg="rgba(15, 23, 42, 0.38)"
-            borderColor="rgba(148, 163, 184, 0.28)"
+            bg="bg.panel"
+            borderColor="border.emphasized"
             borderWidth="2px"
-            color="gray.100"
+            color="fg"
             fontSize={{ base: "md", md: "lg" }}
-            _placeholder={{ color: "gray.500" }}
-            _hover={{ borderColor: "gray.500" }}
+            _placeholder={{ color: "fg.muted" }}
+            _hover={{ borderColor: "gray.400" }}
             _focusVisible={{
-              borderColor: "cyan.300",
-              boxShadow: "0 0 0 1px var(--chakra-colors-cyan-300)",
+              borderColor: "cyan.600",
+              boxShadow: "0 0 0 1px var(--chakra-colors-cyan-600)",
+            }}
+            _dark={{
+              bg: "rgba(15, 23, 42, 0.38)",
+              borderColor: "rgba(148, 163, 184, 0.28)",
+              color: "gray.100",
+              _placeholder: { color: "gray.500" },
+              _hover: { borderColor: "gray.500" },
+              _focusVisible: {
+                borderColor: "cyan.300",
+                boxShadow: "0 0 0 1px var(--chakra-colors-cyan-300)",
+              },
             }}
           />
 
@@ -80,16 +91,25 @@ export function TodoForm({ onCreate }: TodoFormProps) {
             h={{ base: "12", md: "14" }}
             minW={{ base: "12", md: "14" }}
             borderRadius="lg"
-            bg="gray.700"
-            color="gray.100"
+            bg="gray.800"
+            color="white"
             flexShrink="0"
-            _hover={{ bg: "gray.600", color: "cyan.200" }}
+            _hover={{ bg: "gray.700", color: "cyan.100" }}
+            _dark={{
+              bg: "gray.700",
+              color: "gray.100",
+              _hover: { bg: "gray.600", color: "cyan.200" },
+            }}
           >
             <LuPlus size="28" />
           </IconButton>
         </HStack>
 
-        {error && <Field.ErrorText color="red.300">{error}</Field.ErrorText>}
+        {error && (
+          <Field.ErrorText color="red.600" _dark={{ color: "red.300" }}>
+            {error}
+          </Field.ErrorText>
+        )}
       </Field.Root>
     </chakra.form>
   );

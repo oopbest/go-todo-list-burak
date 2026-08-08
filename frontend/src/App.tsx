@@ -16,6 +16,7 @@ import {
   useDeleteTodo,
   useUpdateTodo,
 } from "./features/todos/useTodoMutations";
+import { ColorModeButton } from "./components/ui/color-mode";
 
 function App() {
   const todosQuery = useTodos();
@@ -84,12 +85,12 @@ function App() {
   };
 
   return (
-    <Box
-      minH="100vh"
-      bg="#171d2b"
-      color="gray.100"
-      py={{ base: "8", md: "14" }}
-    >
+    <Box minH="100vh" bg="bg.subtle" color="fg" py={{ base: "8", md: "14" }}>
+      <ColorModeButton
+        position="absolute"
+        top={{ base: "4", md: "6" }}
+        right={{ base: "4", md: "6" }}
+      />
       <Container maxW="2xl">
         <Stack gap="5">
           {!isLoading && !error && <TodoForm onCreate={handleCreate} />}
