@@ -7,8 +7,8 @@ type TodoListProps = {
   todos: Todo[];
   updatingTodoIDs: Set<string>;
   deletingTodoIDs: Set<string>;
-  onComplete: (id: string) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onComplete: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
 export function TodoList({
@@ -108,7 +108,7 @@ export function TodoList({
                 _hover={{ bg: "rgba(34, 197, 94, 0.15)", color: "green.200" }}
                 onClick={() => {
                   if (!todo.completed) {
-                    void onComplete(todo.id);
+                    onComplete(todo.id);
                   }
                 }}
               >
@@ -127,7 +127,7 @@ export function TodoList({
                 disabled={isBusy}
                 _hover={{ bg: "rgba(239, 68, 68, 0.15)", color: "red.300" }}
                 onClick={() => {
-                  void onDelete(todo.id);
+                  onDelete(todo.id);
                 }}
               >
                 <LuTrash2 size="20" />

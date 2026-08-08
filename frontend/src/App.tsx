@@ -62,18 +62,16 @@ function App() {
     });
   };
 
-  const handleComplete = async (id: string) => {
-    try {
-      await updateMutation.mutateAsync({
-        id,
-        input: { completed: true },
-      });
-    } catch {
-      // The mutation error is rendered by App.
-    }
+  const handleComplete = (id: string) => {
+    updateMutation.mutate({
+      id,
+      input: {
+        completed: true,
+      },
+    });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this task?",
     );
@@ -82,11 +80,7 @@ function App() {
       return;
     }
 
-    try {
-      await deleteMutation.mutateAsync(id);
-    } catch {
-      // The mutation error is rendered by App.
-    }
+    deleteMutation.mutate(id);
   };
 
   return (
