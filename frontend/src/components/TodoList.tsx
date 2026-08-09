@@ -5,6 +5,7 @@ import { TodoItem } from "./TodoItem";
 
 type TodoListProps = {
   todos: Todo[];
+  emptyMessage?: string;
   updatingTodoIDs: Set<string>;
   deletingTodoIDs: Set<string>;
   onComplete: (id: string) => void;
@@ -14,6 +15,7 @@ type TodoListProps = {
 
 export function TodoList({
   todos,
+  emptyMessage = "No tasks yet.",
   updatingTodoIDs,
   deletingTodoIDs,
   onComplete,
@@ -35,7 +37,7 @@ export function TodoList({
           bg: "rgba(15, 23, 42, 0.25)",
         }}
       >
-        <Text color="fg.muted">No tasks yet.</Text>
+        <Text color="fg.muted">{emptyMessage}</Text>
       </Box>
     );
   }

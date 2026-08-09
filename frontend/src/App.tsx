@@ -17,14 +17,45 @@ import {
   useUpdateTodo,
 } from "./features/todos/useTodoMutations";
 import { ColorModeButton } from "./components/ui/color-mode";
+import { TodoFilters } from "./components/TodoFilters";
+import type { TodoFilter } from "./types/todo";
+import { useState } from "react";
 
 function App() {
+  const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
+
   const todosQuery = useTodos();
   const createMutation = useCreateTodo();
   const updateMutation = useUpdateTodo();
   const deleteMutation = useDeleteTodo();
 
   const todos = todosQuery.data ?? [];
+  const counts = {
+    all: todos.length,
+    inProgress: todos.filter((todo) => !todo.completed).length,
+    done: todos.filter((todo) => todo.completed).length,
+  };
+
+  const filteredTodos = todos.filter((todo) => {
+    switch (selectedFilter) {
+      case "in-progress":
+        return !todo.completed;
+
+      case "done":
+        return todo.completed;
+
+      case "all":
+        return true;
+    }
+  });
+
+  const emptyMessage =
+    selectedFilter === "done"
+      ? "No completed tasks."
+      : selectedFilter === "in-progress"
+        ? "No tasks in progress."
+        : "No tasks yet.";
+
   const isLoading = todosQuery.isPending;
   const error =
     todosQuery.error instanceof Error
@@ -154,9 +185,18 @@ function App() {
                   <Text color="red.200">{mutationError}</Text>
                 </Box>
               )}
-
+              {/* Render the filters */}
+              {todos.length > 0 && (
+                <TodoFilters
+                  value={selectedFilter}
+                  counts={counts}
+                  onChange={setSelectedFilter}
+                />
+              )}
+              {/* Render the list of todos */}
               <TodoList
-                todos={todos}
+                todos={filteredTodos}
+                emptyMessage={emptyMessage}
                 updatingTodoIDs={updatingTodoIDs}
                 deletingTodoIDs={deletingTodoIDs}
                 onComplete={handleComplete}
