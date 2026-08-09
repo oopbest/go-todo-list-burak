@@ -14,11 +14,13 @@ import (
 
 type Handler struct {
 	repository *Repository
+	service    *Service
 }
 
 func NewHandler(repository *Repository) *Handler {
 	return &Handler{
 		repository: repository,
+		service:    NewService(repository),
 	}
 }
 
@@ -113,35 +115,10 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 	}
 
 	var request UpdateRequest
+
 	if err := c.BodyParser(&request); err != nil {
 		return c.Status(fiber.StatusBadRequest).
 			JSON(fiber.Map{"error": "Invalid request body"})
-	}
-
-	// If the request is trying to set Completed to false, return an error
-	if request.Completed != nil && !*request.Completed {
-		return c.Status(fiber.StatusBadRequest).
-			JSON(fiber.Map{"error": "Completed todo cannot be reopened"})
-	}
-
-	updates := bson.M{}
-
-	if request.Completed != nil {
-		updates["completed"] = *request.Completed
-	}
-
-	if request.Body != nil {
-		if strings.TrimSpace(*request.Body) == "" {
-			return c.Status(fiber.StatusBadRequest).
-				JSON(fiber.Map{"error": "Body is required"})
-		}
-
-		updates["body"] = *request.Body
-	}
-
-	if len(updates) == 0 {
-		return c.Status(fiber.StatusBadRequest).
-			JSON(fiber.Map{"error": "No fields to update"})
 	}
 
 	ctx, cancel := context.WithTimeout(
@@ -150,18 +127,39 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 	)
 	defer cancel()
 
-	updatedTodo, err := h.repository.Update(ctx, id, updates)
+	updatedTodo, err := h.service.Update(
+		ctx,
+		id,
+		request,
+	)
 
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return c.Status(fiber.StatusNotFound).
-			JSON(fiber.Map{"error": "Todo not found"})
-	}
+	switch {
+	case errors.Is(err, ErrCompletedTodoCannotBeReopened):
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Completed todo cannot be reopened",
+		})
 
-	if err != nil {
+	case errors.Is(err, ErrBodyRequired):
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Body is required",
+		})
+
+	case errors.Is(err, ErrNoFieldsToUpdate):
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "No fields to update",
+		})
+
+	case errors.Is(err, mongo.ErrNoDocuments):
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Todo not found",
+		})
+
+	case err != nil:
 		log.Printf("Failed to update todo: %v", err)
 
-		return c.Status(fiber.StatusInternalServerError).
-			JSON(fiber.Map{"error": "Failed to update todo"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update todo",
+		})
 	}
 
 	return c.JSON(updatedTodo)
