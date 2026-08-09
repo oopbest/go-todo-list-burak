@@ -72,6 +72,15 @@ function App() {
     });
   };
 
+  const handleEdit = async (id: string, body: string) => {
+    await updateMutation.mutateAsync({
+      id,
+      input: {
+        body,
+      },
+    });
+  };
+
   const handleDelete = (id: string) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this task?",
@@ -152,6 +161,7 @@ function App() {
                 deletingTodoIDs={deletingTodoIDs}
                 onComplete={handleComplete}
                 onDelete={handleDelete}
+                onEdit={handleEdit}
               />
             </>
           )}
