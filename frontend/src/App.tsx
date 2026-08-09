@@ -20,9 +20,11 @@ import { ColorModeButton } from "./components/ui/color-mode";
 import { TodoFilters } from "./components/TodoFilters";
 import type { TodoFilter } from "./types/todo";
 import { useState } from "react";
+import { TodoSearch } from "./components/TodoSearch";
 
 function App() {
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const todosQuery = useTodos();
   const createMutation = useCreateTodo();
@@ -49,12 +51,22 @@ function App() {
     }
   });
 
+  const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase();
+
+  const visibleTodos = filteredTodos.filter((todo) =>
+    todo.body.toLocaleLowerCase().includes(normalizedSearchTerm),
+  );
+
+  const trimmedSearchTerm = searchTerm.trim();
+
   const emptyMessage =
-    selectedFilter === "done"
-      ? "No completed tasks."
-      : selectedFilter === "in-progress"
-        ? "No tasks in progress."
-        : "No tasks yet.";
+    trimmedSearchTerm !== ""
+      ? `No tasks match "${trimmedSearchTerm}".`
+      : selectedFilter === "done"
+        ? "No completed tasks."
+        : selectedFilter === "in-progress"
+          ? "No tasks in progress."
+          : "No tasks yet.";
 
   const isLoading = todosQuery.isPending;
   const error =
@@ -193,9 +205,18 @@ function App() {
                   onChange={setSelectedFilter}
                 />
               )}
+
+              <TodoSearch
+                value={searchTerm}
+                onChange={setSearchTerm}
+                onClear={() => {
+                  setSearchTerm("");
+                }}
+              />
+
               {/* Render the list of todos */}
               <TodoList
-                todos={filteredTodos}
+                todos={visibleTodos}
                 emptyMessage={emptyMessage}
                 updatingTodoIDs={updatingTodoIDs}
                 deletingTodoIDs={deletingTodoIDs}
