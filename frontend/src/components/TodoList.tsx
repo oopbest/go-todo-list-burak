@@ -1,6 +1,6 @@
 import { Box, Stack, Text } from "@chakra-ui/react";
 
-import type { Todo } from "../types/todo";
+import type { Todo, TodoPriority } from "../types/todo";
 import { TodoItem } from "./TodoItem";
 
 type TodoListProps = {
@@ -9,7 +9,11 @@ type TodoListProps = {
   updatingTodoIDs: Set<string>;
   deletingTodoIDs: Set<string>;
   onComplete: (id: string) => void;
-  onEdit: (id: string, body: string) => Promise<void>;
+  onEdit: (
+    id: string,
+    body: string,
+    priority: TodoPriority,
+  ) => Promise<void>;
   onDelete: (id: string) => void;
 };
 

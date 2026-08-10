@@ -85,9 +85,21 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 			JSON(fiber.Map{"error": "Body is required"})
 	}
 
+	priority := PriorityMedium
+	if request.Priority != nil {
+		if !request.Priority.IsValid() {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Priority must be low, medium, or high",
+			})
+		}
+
+		priority = *request.Priority
+	}
+
 	todo := Todo{
 		Completed: request.Completed,
 		Body:      request.Body,
+		Priority:  priority,
 	}
 
 	ctx, cancel := context.WithTimeout(
@@ -152,6 +164,11 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 	case errors.Is(err, mongo.ErrNoDocuments):
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Todo not found",
+		})
+
+	case errors.Is(err, ErrInvalidPriority):
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Priority must be low, medium, or high",
 		})
 
 	case err != nil:

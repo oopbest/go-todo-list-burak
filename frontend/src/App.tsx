@@ -18,7 +18,7 @@ import {
 } from "./features/todos/useTodoMutations";
 import { ColorModeButton } from "./components/ui/color-mode";
 import { TodoFilters } from "./components/TodoFilters";
-import type { TodoFilter } from "./types/todo";
+import type { TodoFilter, TodoPriority } from "./types/todo";
 import { useState } from "react";
 import { TodoSearch } from "./components/TodoSearch";
 
@@ -99,10 +99,11 @@ function App() {
       : [],
   );
 
-  const handleCreate = async (body: string) => {
+  const handleCreate = async (body: string, priority: TodoPriority) => {
     await createMutation.mutateAsync({
       body,
       completed: false,
+      priority,
     });
   };
 
@@ -115,11 +116,16 @@ function App() {
     });
   };
 
-  const handleEdit = async (id: string, body: string) => {
+  const handleEdit = async (
+    id: string,
+    body: string,
+    priority: TodoPriority,
+  ) => {
     await updateMutation.mutateAsync({
       id,
       input: {
         body,
+        priority,
       },
     });
   };

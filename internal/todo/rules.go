@@ -14,6 +14,10 @@ var (
 	ErrNoFieldsToUpdate = errors.New(
 		"no fields to update",
 	)
+
+	ErrInvalidPriority = errors.New(
+		"invalid priority",
+	)
 )
 
 func validateCompletionTransition(

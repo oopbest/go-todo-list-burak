@@ -37,6 +37,7 @@ func (s *Service) Update(
 ) (Todo, error) {
 	updates := bson.M{}
 
+	// Validate body if it's provided in the request
 	if request.Body != nil {
 		if strings.TrimSpace(*request.Body) == "" {
 			return Todo{}, ErrBodyRequired
@@ -45,6 +46,7 @@ func (s *Service) Update(
 		updates["body"] = *request.Body
 	}
 
+	// Validate completed if it's provided in the request
 	if request.Completed != nil {
 		currentTodo, err := s.repository.FindByID(ctx, id)
 		if err != nil {
@@ -61,6 +63,16 @@ func (s *Service) Update(
 		updates["completed"] = *request.Completed
 	}
 
+	// Validate priority if it's provided in the request
+	if request.Priority != nil {
+		if !request.Priority.IsValid() {
+			return Todo{}, ErrInvalidPriority
+		}
+
+		updates["priority"] = *request.Priority
+	}
+
+	// If no fields are provided for update, return an error
 	if len(updates) == 0 {
 		return Todo{}, ErrNoFieldsToUpdate
 	}

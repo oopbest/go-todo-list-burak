@@ -7,6 +7,7 @@ import {
   HStack,
   IconButton,
   Input,
+  NativeSelect,
   Stack,
   Text,
 } from "@chakra-ui/react";
@@ -14,19 +15,30 @@ import {
 import {
   LuCheck,
   LuCircleCheckBig,
+  LuFlag,
   LuPencil,
   LuTrash2,
   LuX,
 } from "react-icons/lu";
 
-import type { Todo } from "../types/todo";
+import type { Todo, TodoPriority } from "../types/todo";
+
+const priorityColorPalettes: Record<TodoPriority, string> = {
+  low: "gray",
+  medium: "blue",
+  high: "red",
+};
 
 type TodoItemProps = {
   todo: Todo;
   isUpdating: boolean;
   isDeleting: boolean;
   onComplete: (id: string) => void;
-  onEdit: (id: string, body: string) => Promise<void>;
+  onEdit: (
+    id: string,
+    body: string,
+    priority: TodoPriority,
+  ) => Promise<void>;
   onDelete: (id: string) => void;
 };
 
@@ -39,18 +51,23 @@ export function TodoItem({
   onEdit,
 }: TodoItemProps) {
   const isBusy = isUpdating || isDeleting;
+  const priority = todo.priority || "medium";
   const [isEditing, setIsEditing] = useState(false);
   const [editedBody, setEditedBody] = useState(todo.body);
+  const [editedPriority, setEditedPriority] =
+    useState<TodoPriority>(priority);
   const [editError, setEditError] = useState<string | null>(null);
 
   function startEditing() {
     setEditedBody(todo.body);
+    setEditedPriority(priority);
     setEditError(null);
     setIsEditing(true);
   }
 
   function cancelEditing() {
     setEditedBody(todo.body);
+    setEditedPriority(priority);
     setEditError(null);
     setIsEditing(false);
   }
@@ -63,7 +80,7 @@ export function TodoItem({
       return;
     }
 
-    if (trimmedBody === todo.body) {
+    if (trimmedBody === todo.body && editedPriority === priority) {
       setIsEditing(false);
       return;
     }
@@ -71,7 +88,7 @@ export function TodoItem({
     try {
       setEditError(null);
 
-      await onEdit(todo.id, trimmedBody);
+      await onEdit(todo.id, trimmedBody, editedPriority);
 
       setIsEditing(false);
     } catch (error) {
@@ -116,7 +133,11 @@ export function TodoItem({
       >
         {isEditing ? (
           <Stack gap="2">
-            <HStack align="stretch" gap="2">
+            <Stack
+              direction={{ base: "column", md: "row" }}
+              align="stretch"
+              gap="2"
+            >
               <Input
                 aria-label={`Edit ${todo.body}`}
                 value={editedBody}
@@ -132,31 +153,72 @@ export function TodoItem({
                 onKeyDown={handleEditKeyDown}
               />
 
-              <IconButton
-                type="button"
-                aria-label="Save task"
-                title="Save"
-                colorPalette="green"
-                loading={isUpdating}
-                disabled={isDeleting}
-                onClick={() => {
-                  void saveEdit();
-                }}
-              >
-                <LuCheck />
-              </IconButton>
-
-              <IconButton
-                type="button"
-                aria-label="Cancel editing"
-                title="Cancel"
-                variant="outline"
+              <NativeSelect.Root
+                minW={{ md: "40" }}
                 disabled={isBusy}
-                onClick={cancelEditing}
               >
-                <LuX />
-              </IconButton>
-            </HStack>
+                <NativeSelect.Field
+                  aria-label={`Priority for ${todo.body}`}
+                  value={editedPriority}
+                  borderRadius="md"
+                  cursor="pointer"
+                  pr="10"
+                  _focusVisible={{
+                    borderColor: "cyan.600",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-cyan-600)",
+                  }}
+                  _dark={{
+                    _focusVisible: {
+                      borderColor: "cyan.300",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-cyan-300)",
+                    },
+                  }}
+                  onChange={(event) => {
+                    setEditedPriority(
+                      event.target.value as TodoPriority,
+                    );
+                  }}
+                >
+                  <option value="low">Low priority</option>
+                  <option value="medium">Medium priority</option>
+                  <option value="high">High priority</option>
+                </NativeSelect.Field>
+
+                <NativeSelect.Indicator
+                  color="fg.muted"
+                  pointerEvents="none"
+                />
+              </NativeSelect.Root>
+
+              <HStack align="stretch" gap="2">
+                <IconButton
+                  type="button"
+                  aria-label="Save task"
+                  title="Save"
+                  colorPalette="green"
+                  loading={isUpdating}
+                  disabled={isDeleting}
+                  flex={{ base: "1", md: "initial" }}
+                  onClick={() => {
+                    void saveEdit();
+                  }}
+                >
+                  <LuCheck />
+                </IconButton>
+
+                <IconButton
+                  type="button"
+                  aria-label="Cancel editing"
+                  title="Cancel"
+                  variant="outline"
+                  disabled={isBusy}
+                  flex={{ base: "1", md: "initial" }}
+                  onClick={cancelEditing}
+                >
+                  <LuX />
+                </IconButton>
+              </HStack>
+            </Stack>
 
             {editError && (
               <Text color="red.600" fontSize="sm" _dark={{ color: "red.300" }}>
@@ -182,15 +244,45 @@ export function TodoItem({
               {todo.body}
             </Text>
 
-            <Badge
-              flexShrink="0"
-              colorPalette={todo.completed ? "green" : "yellow"}
-              variant="subtle"
-              fontWeight="bold"
-              letterSpacing="wide"
-            >
-              {todo.completed ? "DONE" : "IN PROGRESS"}
-            </Badge>
+            <HStack flexShrink="0" gap="2" flexWrap="wrap" justify="flex-end">
+              <HStack
+                as="span"
+                gap="1"
+                px="2"
+                py="0.5"
+                borderWidth="1px"
+                borderColor={`${priorityColorPalettes[priority]}.300`}
+                borderRadius="full"
+                color={`${priorityColorPalettes[priority]}.700`}
+                bg="transparent"
+                _dark={{
+                  borderColor: `${priorityColorPalettes[priority]}.500`,
+                  color: `${priorityColorPalettes[priority]}.200`,
+                }}
+              >
+                <LuFlag size="12" aria-hidden="true" />
+
+                <Text
+                  as="span"
+                  fontSize="xs"
+                  fontWeight="bold"
+                  lineHeight="short"
+                  letterSpacing="wide"
+                  textTransform="uppercase"
+                >
+                  {priority}
+                </Text>
+              </HStack>
+
+              <Badge
+                colorPalette={todo.completed ? "green" : "yellow"}
+                variant="solid"
+                fontWeight="bold"
+                letterSpacing="wide"
+              >
+                {todo.completed ? "DONE" : "IN PROGRESS"}
+              </Badge>
+            </HStack>
           </HStack>
         )}
       </Box>
